@@ -70,11 +70,11 @@ public class ConnectFour {
 				if (directCheck(x,y)){
 					int maybeWinner = board[x][y];
 					if (maybeWinner == -1){
-						System.out.println("-1 is the winner!");
+						System.out.println("X is the winner!");
 						return true;
 					}
 					else if (maybeWinner  == 1){
-						System.out.println("1 is the winner!");
+						System.out.println("O is the winner!");
 						return true;
 					}
 				}
@@ -246,6 +246,24 @@ public class ConnectFour {
 
 		
 	}
+	
+	public void displayBoard(){
+		for (int i = 0; i <= lastRow; i++){
+			for (int j = 0; j <= lastCol; j++){
+				switch (board[i][j]){
+				case -1: System.out.print("[X]");
+						break;
+				case 1: System.out.print("[O]");
+						break;
+				default: System.out.print("[ ]");
+						break;
+
+				}
+			}
+			System.out.println();
+		}
+	}
+	
 		
 	public void playGame(){
 		
@@ -291,6 +309,7 @@ public class ConnectFour {
 				
 			}
 			System.out.println("You picked column " + (colPiece+1));
+			this.displayBoard();
 			isWinner = this.checkIfWinner();
 			if (isWinner){
 				break;
