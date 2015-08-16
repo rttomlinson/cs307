@@ -3,28 +3,31 @@ import java.util.Scanner;
 
 public class ConnectFour {
 		private int [][] board;
-		private int lastRow;
-		private int lastCol;
+		private final int LAST_ROW;
+		private final int LAST_COL;
+		private final int LENGTH_TO_WIN;
 	
 	
 	public ConnectFour(){
 		board = new int[6][7];
-		lastRow = 5;
-		lastCol = 6;
+		LAST_ROW = 5;
+		LAST_COL = 6;
+		LENGTH_TO_WIN = 4;
 		
 		
 	}
 	
 	public ConnectFour(int [][] startBoard){
 		board = startBoard;
-		lastRow = startBoard.length-1;
-		lastCol = startBoard[0].length-1;
+		LAST_ROW = startBoard.length-1;
+		LAST_COL = startBoard[0].length-1;
+		LENGTH_TO_WIN = 4;
+
 	}
 	
 	
-	//Combine isSpace and spotsLeft?
-	public int isSpace(int col){
-		for (int i = lastRow; i > -1; i--)
+	public int lastAvailableSpaceInColumn(int col){
+		for (int i = LAST_ROW; i >= 0; i--)
 		{
 			if (board[i][col] == 0)
 			{
@@ -34,49 +37,95 @@ public class ConnectFour {
 		return -1;
 	}
 	
-	public boolean spotsLeft(){
-		int counter = 0;
-		for (int i = 0; i <= lastCol; i++){
-			if (board[0][i] == 0){
-				counter++;
+	
+	public int[] getNextPlayFromPlayer(Scanner in){
+		int[] playersSelectedPlay= new int[2];
+		boolean validPlayerSelection = false;
+		do{
+			System.out.print("Select column to drop next piece: ");
+			if (in.hasNextInt()){
+				playersSelectedPlay[1] = in.nextInt()-1;
+				if (validateColumn(playersSelectedPlay[1])){
+					playersSelectedPlay[0] = this.lastAvailableSpaceInColumn(playersSelectedPlay[1]);
+					if (playersSelectedPlay[0] >= 0){
+						validPlayerSelection = true;
+					}
+					else{
+						System.out.println("Column is full.");
+					}
+				}
+
 			}
+			else{
+				System.out.println("That is not a valid choice");
+				in.next();
+			} 
+			
+		} while (!validPlayerSelection);
+		return playersSelectedPlay;
+	}
+
+/*
+	public boolean validateRow(int playersSelectedPlay){
+		if (playersSelectedPlay[1] < 0 || playersSelectedPlay[1] > LAST_COL || playersSelectedPlay[0] < 0){
+			System.out.println("That is not a valid column or column is full.");	
+			System.out.print("Select column to drop next piece: ");
+			return false;
 		}
-		if (counter > 0){
-			return true;
+		return true;
+	}
+*/	
+	public boolean validateColumn(int playersSelectedColumn){
+		if (playersSelectedColumn < 0 || playersSelectedColumn > LAST_COL){
+			System.out.println("That is not a valid column.");	
+			return false;
 		}
+		return true;
+	}
+/*
+	public boolean validateCoordinates(int playersSelectedPlay){
+		if (playersSelectedPlay[1] < 0 || playersSelectedPlay[1] > LAST_COL || playersSelectedPlay[0] < 0){
+			System.out.println("That is not a valid column or column is full.");	
+			System.out.print("Select column to drop next piece: ");
+			return false;
+		}
+		return true;
+	}
+*/	
+	
+	
+	
+	public boolean checkIfGameIsADraw(){
+		for (int i = 0; i <= LAST_COL; i++){
+			if (board[0][i] == 0){
+				return true;
+			}
+		}	
+		System.out.println("It's a draw! No more valid spots.");
 		return false;
 	}
 	
 	
-	
-	public void addPiece(int playerTurn, int colPiece, int availRow){
-		
+	public void addPiece(int playerTurn, int[] nextPlay){
 		if (playerTurn == -1){
-			board[availRow][colPiece] = -1;
-			System.out.println("You added a piece to column: " + (colPiece+1));
+			System.out.println("Player 1's turn (X)");
 		}
 		else{
-			board[availRow][colPiece] = 1;
-			System.out.println("You added a piece to column: " + (colPiece+1));
+			System.out.println("Player 2's turn (O)");
+
 		}
-		
+		board[nextPlay[0]][nextPlay[1]] = playerTurn;
+		System.out.println("You added a piece to column: " + (nextPlay[1]+1));		
 		
 	}
 	
-	public boolean checkIfWinner(){
+	public boolean checkIfWinner(int player){
 		//for each space
-		for (int x = 0; x <= lastRow; x++){
-			for (int y = 0; y <= lastCol; y++){
-				if (directCheck(x,y)){
-					int maybeWinner = board[x][y];
-					if (maybeWinner == -1){
-						System.out.println("X is the winner!");
-						return true;
-					}
-					else if (maybeWinner  == 1){
-						System.out.println("O is the winner!");
-						return true;
-					}
+		for (int x = 0; x <= LAST_ROW; x++){
+			for (int y = 0; y <= LAST_COL; y++){
+				if (checkAllPossibleWaysToWinFromGivenCoorindates(x,y, player)){
+					System.out.println(player + " is the winner!");
+					return true;
 				}
 			}
 		}
@@ -85,11 +134,11 @@ public class ConnectFour {
 		
 	}
 	
-	private boolean directCheck(int i, int j){
+	private boolean checkAllPossibleWaysToWinFromGivenCoorindates(int i, int j, int playerTurn){
 		int counter = 0;
-		if (j+3 <= lastCol){ //check if winner directly to the right
+		if (j+3 <= LAST_COL){ //check if winner directly to the right
 			for (int x = j; x <= j+3; x++){
-				if (board[i][x] != board[i][j]){
+				if (board[i][x] != playerTurn){
 					//not matching
 					break;
 				}
@@ -98,18 +147,16 @@ public class ConnectFour {
 				}
 				//what to do if they are all matching
 			}
-			if (counter == 4){
+			if (counter == LENGTH_TO_WIN){
 				return true;
 			}
-			else{
-				counter = 0;
-			}
+			counter = 0;
 		}
 		
 		
-		if (i+3 <= lastRow){ //check if winner directly down
+		if (i+3 <= LAST_ROW){ //check if winner directly down
 			for (int x = i; x <= i+3; x++){
-				if (board[x][j] != board[i][j]){
+				if (board[x][j] != playerTurn){
 					//not matching
 					break;
 				}
@@ -118,16 +165,14 @@ public class ConnectFour {
 				}
 				//what to do if they are all matching
 			}
-			if (counter == 4){
+			if (counter == LENGTH_TO_WIN){
 				return true;
 			}
-			else{
-				counter = 0;
-			}
+			counter = 0;
 		}
 		if (j-3 >= 0){ // check if winner directly left
 			for (int x = j; x >= 0; x--){
-				if (board[i][x] != board[i][j]){
+				if (board[i][x] != playerTurn){
 					//not matching
 					break;
 				}
@@ -136,16 +181,14 @@ public class ConnectFour {
 				}
 				//what to do if they are all matching
 			}
-			if (counter == 4){
+			if (counter == LENGTH_TO_WIN){
 				return true;
 			}
-			else{
-				counter = 0;
-			}
+			counter = 0;
 		}
 		if (i-3 >= 0){// check if winner directly up
 			for (int x = i; x >= 0; x--){
-				if (board[x][j] != board[i][j]){
+				if (board[x][j] != playerTurn){
 					//not matching
 					break;
 				}
@@ -154,17 +197,15 @@ public class ConnectFour {
 				}
 				//what to do if they are all matching
 			}
-			if (counter == 4){
+			if (counter == LENGTH_TO_WIN){
 				return true;
 			}
-			else{
-				counter = 0;
-			}
+			counter = 0;
 		}
 		if (j-3 >= 0 && i-3 >= 0){ // check if winner diagonally left and up
 			int y = j;
 			for (int x = i; x >= i-3; x--){
-				if (board[x][y] != board[i][j]){
+				if (board[x][y] != playerTurn){
 					//not matching
 					break;
 				}
@@ -174,17 +215,15 @@ public class ConnectFour {
 				}
 				//what to do if they are all matching
 			}
-			if (counter == 4){
+			if (counter == LENGTH_TO_WIN){
 				return true;
 			}
-			else{
-				counter = 0;
-			}
+			counter = 0;
 		}
-		if (i-3 >= 0 && j+3 <= lastCol){// check if winner diagonally up and right
+		if (i-3 >= 0 && j+3 <= LAST_COL){// check if winner diagonally up and right
 			int y = j;
 			for (int x = i; x >= i-3; x--){
-				if (board[x][y] != board[i][j]){
+				if (board[x][y] != playerTurn){
 					//not matching
 					break;
 				}
@@ -194,17 +233,15 @@ public class ConnectFour {
 				}
 				//what to do if they are all matching
 			}
-			if (counter == 4){
+			if (counter == LENGTH_TO_WIN){
 				return true;
 			}
-			else{
-				counter = 0;
-			}
+			counter = 0;
 		}
-		if (i+3 <= lastRow && j-3 >= 0){ //check if winner diagonally down and left
+		if (i+3 <= LAST_ROW && j-3 >= 0){ //check if winner diagonally down and left
 			int y = j;
 			for (int x = i; x <= i+3; x++){
-				if (board[x][y] != board[i][j]){
+				if (board[x][y] != playerTurn){
 					//not matching
 					break;
 				}
@@ -214,17 +251,15 @@ public class ConnectFour {
 				}
 				//what to do if they are all matching
 			}
-			if (counter == 4){
+			if (counter == LENGTH_TO_WIN){
 				return true;
 			}
-			else{
-				counter = 0;
-			}
+			counter = 0;
 		}
-		if (j+3 <= lastCol && i+3 <= lastRow){ //check if winner diagonally right and down
+		if (j+3 <= LAST_COL && i+3 <= LAST_ROW){ //check if winner diagonally right and down
 			int y = j;
 			for (int x = i; x <= i+3; x++){
-				if (board[x][y] != board[i][j]){
+				if (board[x][y] != playerTurn){
 					//not matching
 					break;
 				}
@@ -234,12 +269,10 @@ public class ConnectFour {
 				}
 				//what to do if they are all matching
 			}
-			if (counter == 4){
+			if (counter == LENGTH_TO_WIN){
 				return true;
 			}
-			else{
-				counter = 0;
-			}
+			counter = 0;
 		}
 
 		return false;
@@ -247,86 +280,54 @@ public class ConnectFour {
 		
 	}
 	
-	public void displayBoard(){
-		for (int i = 0; i <= lastRow; i++){
-			for (int j = 0; j <= lastCol; j++){
+	public String toString(){
+		String visualBoard = "";
+		for (int i = 0; i <= LAST_ROW; i++){
+			for (int j = 0; j <= LAST_COL; j++){
 				switch (board[i][j]){
-				case -1: System.out.print("[X]");
+				case -1: visualBoard += "[X]";
 						break;
-				case 1: System.out.print("[O]");
+				case 1: visualBoard += "[O]";
 						break;
-				default: System.out.print("[ ]");
+				default: visualBoard += "[ ]";
 						break;
 
 				}
 			}
-			System.out.println();
+			visualBoard += "\n";
 		}
+		return visualBoard;
 	}
 	
 		
-	public void playGame(){
+	public void playGame(Scanner in){
+		System.out.println("Welcome to Connect 4. Player 1 goes first and is 'X's. Player 2 is 'O's");
 		
-		Scanner in = new Scanner(System.in);
 		boolean isWinner = false;
+		boolean legalPlaysLeft = true;
 		int playerPiece = -1;
-		while (!isWinner){
-			if (!this.spotsLeft()){
-				System.out.println("It's a draw! No more valid spots.");
-				break;
-			}
-			int colPiece = 0;
-			boolean goodValue = false;
-			System.out.print("Select column to drop next piece: ");
-			
-			while (!goodValue){
-				if (in.hasNextInt()){
-					colPiece = in.nextInt()-1;
-					if (colPiece < 0 || colPiece > lastCol){
-						System.out.println("That is not a valid column.");	
-						System.out.print("Select column to drop next piece: ");
-					}
-					else{
-						int availRow = this.isSpace(colPiece);
-
-						if (availRow < 0){
-							System.out.println("This column is full.");
-							System.out.print("Please select another column: ");
-
-						}
-						else{
-							this.addPiece(playerPiece, colPiece, availRow);
-							goodValue = true;
-							
-						}
-					}
-				}
-				else{	
-					System.out.println("Invalid Input");	
-					System.out.print("Select column to drop next piece: ");
-					in.next();
-				}
-				
-			}
-			System.out.println("You picked column " + (colPiece+1));
-			this.displayBoard();
-			isWinner = this.checkIfWinner();
-			if (isWinner){
-				break;
-			}
+		while (!isWinner && legalPlaysLeft){
+			int[] nextPlay = this.getNextPlayFromPlayer(in);
+			this.addPiece(playerPiece, nextPlay);
+			System.out.println(this.toString());
+			isWinner = this.checkIfWinner(playerPiece);
+			legalPlaysLeft = this.checkIfGameIsADraw();
 			playerPiece = playerPiece * -1;
 		}
-		in.close();
 	}
 	
 	
 
+	
+	
+	
+	
 	public static void main(String[] args) {
 		
-		
-		System.out.println("Welcome to Connect 4. Player 1 goes first and is 'X's. Player 2 is 'O's");
+		Scanner in = new Scanner(System.in);
 		ConnectFour board3 = new ConnectFour();
-		board3.playGame();
+		board3.playGame(in);
+		in.close();
 		
 	}
 
