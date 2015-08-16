@@ -12,9 +12,7 @@ public class ConnectFour {
 		board = new int[6][7];
 		LAST_ROW = 5;
 		LAST_COL = 6;
-		LENGTH_TO_WIN = 4;
-		
-		
+		LENGTH_TO_WIN = 4;	
 	}
 	
 	public ConnectFour(int [][] startBoard){
@@ -22,19 +20,23 @@ public class ConnectFour {
 		LAST_ROW = startBoard.length-1;
 		LAST_COL = startBoard[0].length-1;
 		LENGTH_TO_WIN = 4;
-
 	}
 	
 	
 	public int lastAvailableSpaceInColumn(int col){
-		for (int i = LAST_ROW; i >= 0; i--)
-		{
-			if (board[i][col] == 0)
-			{
+		for (int i = LAST_ROW; i >= 0; i--){
+			if (board[i][col] == 0){
 				return i;
 			}
 		}
-		return -1;
+		return 0;
+	}
+	
+	public boolean checkIfSpaceAvailableInColumn(int col){
+		if (board[0][col] == 0){
+			return true;
+		}
+		return false;
 	}
 	
 	
@@ -46,21 +48,19 @@ public class ConnectFour {
 			if (in.hasNextInt()){
 				playersSelectedPlay[1] = in.nextInt()-1;
 				if (validateColumn(playersSelectedPlay[1])){
-					playersSelectedPlay[0] = this.lastAvailableSpaceInColumn(playersSelectedPlay[1]);
-					if (playersSelectedPlay[0] >= 0){
+					if (checkIfSpaceAvailableInColumn(playersSelectedPlay[1])){
+						playersSelectedPlay[0] = this.lastAvailableSpaceInColumn(playersSelectedPlay[1]);
 						validPlayerSelection = true;
 					}
 					else{
 						System.out.println("Column is full.");
 					}
 				}
-
 			}
 			else{
 				System.out.println("That is not a valid choice");
 				in.next();
 			} 
-			
 		} while (!validPlayerSelection);
 		return playersSelectedPlay;
 	}
@@ -98,14 +98,13 @@ public class ConnectFour {
 	public boolean checkIfGameIsADraw(){
 		for (int i = 0; i <= LAST_COL; i++){
 			if (board[0][i] == 0){
-				return true;
+				return false;
 			}
 		}	
 		System.out.println("It's a draw! No more valid spots.");
-		return false;
+		return true;
 	}
-	
-	
+		
 	public void addPiece(int playerTurn, int[] nextPlay){
 		if (playerTurn == -1){
 			System.out.println("Player 1's turn (X)");
@@ -116,7 +115,6 @@ public class ConnectFour {
 		}
 		board[nextPlay[0]][nextPlay[1]] = playerTurn;
 		System.out.println("You added a piece to column: " + (nextPlay[1]+1));		
-		
 	}
 	
 	public boolean checkIfWinner(int player){
@@ -124,14 +122,19 @@ public class ConnectFour {
 		for (int x = 0; x <= LAST_ROW; x++){
 			for (int y = 0; y <= LAST_COL; y++){
 				if (checkAllPossibleWaysToWinFromGivenCoorindates(x,y, player)){
-					System.out.println(player + " is the winner!");
+					if (player == -1){
+						System.out.println("Player 1 is the winner!");
+					}
+					else{
+						System.out.println("Player 2 is the winner!");
+
+					}
 					return true;
 				}
 			}
 		}
 		System.out.println("No winner yet");
-		return false;
-		
+		return false;	
 	}
 	
 	private boolean checkAllPossibleWaysToWinFromGivenCoorindates(int i, int j, int playerTurn){
@@ -152,8 +155,6 @@ public class ConnectFour {
 			}
 			counter = 0;
 		}
-		
-		
 		if (i+3 <= LAST_ROW){ //check if winner directly down
 			for (int x = i; x <= i+3; x++){
 				if (board[x][j] != playerTurn){
@@ -274,10 +275,7 @@ public class ConnectFour {
 			}
 			counter = 0;
 		}
-
-		return false;
-
-		
+		return false;	
 	}
 	
 	public String toString(){
@@ -304,23 +302,17 @@ public class ConnectFour {
 		System.out.println("Welcome to Connect 4. Player 1 goes first and is 'X's. Player 2 is 'O's");
 		
 		boolean isWinner = false;
-		boolean legalPlaysLeft = true;
+		boolean isGameADraw = false;
 		int playerPiece = -1;
-		while (!isWinner && legalPlaysLeft){
+		while (!isWinner && !isGameADraw){
 			int[] nextPlay = this.getNextPlayFromPlayer(in);
 			this.addPiece(playerPiece, nextPlay);
 			System.out.println(this.toString());
 			isWinner = this.checkIfWinner(playerPiece);
-			legalPlaysLeft = this.checkIfGameIsADraw();
+			isGameADraw = this.checkIfGameIsADraw();
 			playerPiece = playerPiece * -1;
 		}
 	}
-	
-	
-
-	
-	
-	
 	
 	public static void main(String[] args) {
 		
